@@ -27,7 +27,7 @@ class RVCInference:
         self.models = {}
 
         # Default parameters
-        self.f0method = "rvmpe"
+        self.f0method = "rmvpe"
         self.f0up_key = 0
         self.index_rate = 0.75
         self.filter_radius = 3

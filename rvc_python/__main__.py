@@ -57,7 +57,7 @@ def main():
             "-de",
             "--device",
             type=str,
-            default="cpu:0",
+            default="cuda:0",
             help="Device to use (e.g., cpu:0, cuda:0)",
         )
         subparser.add_argument(
@@ -77,7 +77,7 @@ def main():
             help="Model version",
         )
         subparser.add_argument(
-            "-ir", "--index_rate", type=float, default=0.6, help="Search feature ratio"
+            "-ir", "--index_rate", type=float, default=0.75, help="Search feature ratio"
         )
         subparser.add_argument(
             "-fr",
@@ -97,7 +97,7 @@ def main():
             "-rmr",
             "--rms_mix_rate",
             type=float,
-            default=0.25,
+            default=1,
             help="Volume envelope mix rate",
         )
         subparser.add_argument(
