@@ -8,8 +8,16 @@ from rvc_python.modules.vc.modules import VC
 from rvc_python.configs.config import Config
 from rvc_python.download_model import download_rvc_models
 
+
 class RVCInference:
-    def __init__(self, models_dir="rvc_models", device="cpu:0", model_path=None, index_path="", version="v2"):
+    def __init__(
+        self,
+        models_dir="rvc_models",
+        device="cuda:0",
+        model_path=None,
+        index_path="",
+        version="v2",
+    ):
         self.models_dir = models_dir
         self.device = device
         self.lib_dir = os.path.dirname(os.path.abspath(__file__))
@@ -19,13 +27,13 @@ class RVCInference:
         self.models = {}
 
         # Default parameters
-        self.f0method = "harvest"
+        self.f0method = "rvmpe"
         self.f0up_key = 0
-        self.index_rate = 0.5
+        self.index_rate = 0.75
         self.filter_radius = 3
         self.resample_sr = 0
         self.rms_mix_rate = 1
-        self.protect = 0.33
+        self.protect = 0.5
 
         # Download Models (if necessary)
         download_rvc_models(self.lib_dir)
@@ -48,8 +56,11 @@ class RVCInference:
                 if pth_file:
                     models[model_name] = {
                         "pth": pth_file[0],
-                        "index": index_file[0] if index_file else None
+                        "index": index_file[0] if index_file else None,
                     }
+                    print(
+                        f"Loading model: {pth_file[0]} (index: {index_file[0] if index_file else ""})"
+                    )
         return models
 
     def set_models_dir(self, new_models_dir):
@@ -91,7 +102,7 @@ class RVCInference:
 
         self.vc.get_vc(model_path, version)
         self.current_model = model_name
-        print(f"Model {model_name} loaded.")
+        print(f"Model {model_name} loaded with index {index_path}")
 
     def unload_model(self):
         """Unloads the current model from memory."""
@@ -105,8 +116,13 @@ class RVCInference:
     def set_params(self, **kwargs):
         """Sets parameters for generation."""
         valid_params = [
-            "index_rate", "filter_radius", "resample_sr",
-            "rms_mix_rate", "protect", "f0up_key", "f0method"
+            "index_rate",
+            "filter_radius",
+            "resample_sr",
+            "rms_mix_rate",
+            "protect",
+            "f0up_key",
+            "f0method",
         ]
         for key, value in kwargs.items():
             if key in valid_params:
@@ -127,6 +143,8 @@ class RVCInference:
         model_info = self.models[self.current_model]
         file_index = model_info.get("index", "")
 
+        print(f"Inferring with index: {file_index}")
+
         wav_opt = self.vc.vc_single(
             sid=0,
             input_audio_path=input_path,
@@ -139,7 +157,7 @@ class RVCInference:
             rms_mix_rate=self.rms_mix_rate,
             protect=self.protect,
             f0_file="",
-            file_index2=""
+            file_index2="",
         )
 
         wavfile.write(output_path, self.vc.tgt_sr, wav_opt)
@@ -156,11 +174,13 @@ class RVCInference:
             raise ValueError("Please load a model first.")
 
         os.makedirs(output_dir, exist_ok=True)
-        audio_files = glob(os.path.join(input_dir, '*.*'))
+        audio_files = glob(os.path.join(input_dir, "*.*"))
         processed_files = []
 
         for input_audio_path in audio_files:
-            output_filename = os.path.splitext(os.path.basename(input_audio_path))[0] + '.wav'
+            output_filename = (
+                os.path.splitext(os.path.basename(input_audio_path))[0] + ".wav"
+            )
             output_path = os.path.join(output_dir, output_filename)
             self.infer_file(input_audio_path, output_path)
             processed_files.append(output_path)
@@ -177,13 +197,14 @@ class RVCInference:
         self.config.device = device
         self.vc.device = device
 
+
 # Usage example:
 if __name__ == "__main__":
     rvc = RVCInference(
         device="cuda:0",
         model_path="path/to/model.pth",
         index_path="path/to/index.index",
-        version="v2"
+        version="v2",
     )
     rvc.set_params(f0up_key=2, protect=0.5)
 
