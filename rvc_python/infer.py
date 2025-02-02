@@ -58,9 +58,7 @@ class RVCInference:
                         "pth": pth_file[0],
                         "index": index_file[0] if index_file else None,
                     }
-                    print(
-                        f"Loading model: {pth_file[0]} (index: {index_file[0] if index_file else ""})"
-                    )
+                    print(f"Loading model: {pth_file[0]} (index: {index_file[0]})")
         return models
 
     def set_models_dir(self, new_models_dir):
